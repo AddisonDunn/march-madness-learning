@@ -5,7 +5,7 @@ I used Sublime Text 2 to develop this project. If you use it, you should purchas
 
 mySQLdb is required to use loadData, a core method. SQLAlchemy is also used in this project; download and donate (http://www.sqlalchemy.org/).
 
-The data is from basketball-reference, the basketball-related portion of a cool sports statistics site. I highly reccomend it for projects using sports statistics
+The data is from http://www.sports-reference.com/cbb/, the basketball-related portion of a cool sports statistics site. I highly reccomend it for all projects using sports statistics
 
 I used Python 2.7 on this project. It is highly likely you will have problems using any files on this repository running Python 3.
 
