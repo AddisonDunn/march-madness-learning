@@ -18,7 +18,7 @@ def checkTableExists(db, tablename):
     dbcur.close()
     return False
 
-
+# Loads data from a CSV assuming the top value in the column is the field name
 def loadData(db, tableName, csvName, OVERWRITE = False):
 	# you must create a Cursor object. It will let
 	#  you execute all the queries you need
@@ -81,3 +81,23 @@ def loadData(db, tableName, csvName, OVERWRITE = False):
 	print "Data Loaded! (table \'{}\')".format(tableName)
 
 #----------------------------------------------------------------------------
+
+
+#------------- WHEN USING CSV DATA --------------#
+
+# loadData(db, 'teams', 'data/teams.csv', False)
+# loadData(db, 'regular_season_results', 'data/regular_season_results.csv', False)
+# loadData(db, 'tourney_results', 'data/tourney_results.csv', False)
+
+# Base = automap_base()
+# engine = create_engine('mysql+mysqldb://' + username + ':' + pword + '@localhost/' + dbName)
+# Base.prepare(engine, reflect=True)
+
+# mapped classes are now created with names by default
+# matching that of the table name.
+# Teams = Base.classes.teams
+# RegularSeasonResults = Base.classes.regular_season_results
+
+# session = Session(engine)
+
+#------------- WHEN USING CSV DATA --------------#
