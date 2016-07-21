@@ -52,17 +52,18 @@ class Team(Base):
 
 #----------------------------------------------------------------------------
 
-class TourneyResults(Base):
+class TourneyResult(Base):
     __tablename__ = 'tourney_results'
 
-    season_id = Column(String(1), primary_key=True, unique=False)
+    id = Column(Integer(), primary_key=True, unique=True)
+    season = Column(Integer(), unique=False)
     name = Column(String(50), unique=False)
     wins = Column(Integer(), unique=False)
     pointDif = Column(Integer(), unique=False)
 
     def __repr__(self):
-        return "<TourneyResults(season_id='%s' name='%s', wins='%d', pointDif='%d')>" % (
-                            self.season_id, self.name, self.wins, self.pointDif)
+        return "<TourneyResults(season='%d' name='%s', wins='%d', pointDif='%d')>" % (
+                            self.season, self.name, self.wins, self.pointDif)
 
 #-------------------------------------------------------------------------
 
@@ -186,76 +187,82 @@ def loadTourneyResults(session, numberOfYears):
     else:
         startYear = now.year - 1
 
-    sourceTemp = loadPageSource(rootTourneyLink1 + str(startYear) + rootTourneyLink2)
-    soup = BeautifulSoup(sourceTemp, 'html.parser')
-
     teamNameList = [instance.name for instance in session.query(Team)]
     secondNameList = [instance.second_name for instance in session.query(Team)]
 
-    
+    for x in range(0, numberOfYears):
+        movingYear = startYear - x
 
-    siteData = []
-    for a in soup.find_all('a'):
-        if a.parent.parent.name == "td" or a.parent.parent.name == "p":
-            if a.parent.name == "p" or a.parent.name == "br":
-                siteData.append(a.getText().encode("utf-8"))
-                # print a.getText().encode("utf-8")
+        sourceTemp = loadPageSource(rootTourneyLink1 + str(startYear) + rootTourneyLink2)
+        soup = BeautifulSoup(sourceTemp, 'html.parser')
 
 
-    # Gets list of teams if they have a corresponding score
-     # or x > 250
-    teamList = [siteData[x] for x in range(0, len(siteData)) if not isInt(siteData[x]) and (isInt(siteData[x+1])) ]
+        siteData = []
+        for a in soup.find_all('a'):
+            if a.parent.parent.name == "td" or a.parent.parent.name == "p":
+                if a.parent.name == "p" or a.parent.name == "br":
+                    siteData.append(a.getText().encode("utf-8"))
+                    # print a.getText().encode("utf-8")
 
-    scoreList = [int(x) for x in siteData if isInt(x)]
 
-    # teamDict keeps track of wins and point differential -- [# wins, point differential]
-    teamDict = {key: [0, 0] for key in teamList}
+        # Gets list of teams if they have a corresponding score
+         # or x > 250
+        teamList = [siteData[x] for x in range(0, len(siteData)) if not isInt(siteData[x]) and (isInt(siteData[x+1])) ]
 
-    for x in range(0, len(scoreList)):
-        print teamList[x] + " " + str(x) + ", " + str(scoreList[x])
-    print('-------------------------------------------------------')
+        scoreList = [int(x) for x in siteData if isInt(x)]
 
-    # The two teams that play each other in a given game are not next to each other in the html format.
-    # The teams that play each other are matched up based on haw many total games they play and 
-    # the loaction of their name in teamsList.
-    baseIndex = 0
-    for x in range(0, 8):
-        baseIndex = x * 15
+        # teamDict keeps track of wins and point differential -- [# wins, point differential]
+        teamDict = {key: [0, 0] for key in teamList}
 
-        # Loads all the games that the first or sixth seed would play if they won every game
-        for y in range(0, 4):
-            # upperIndex is the index of a team that appears earlier in teamList, lowerIndex is the other.
-            upperIndex = baseIndex + y
-            lowerIndex = int(baseIndex + float(y**3)/3 + 5/3 * y + 4)
+        # for x in range(0, len(scoreList)):
+        #     print teamList[x] + " " + str(x) + ", " + str(scoreList[x])
+        # print('-------------------------------------------------------')
 
-            loadGame(teamDict, teamList, scoreList, upperIndex, lowerIndex)
 
-            # The top game in this regional bracket has already been loaded. This break prevents it from being loaded again.
-            if y == 2 and x % 2 == 1:
-                break
 
-        loadGame(teamDict, teamList, scoreList, baseIndex + 5, baseIndex + 7)
-        loadGame(teamDict, teamList, scoreList, baseIndex + 8, baseIndex + 11)
-        loadGame(teamDict, teamList, scoreList, baseIndex + 9, baseIndex + 13)  
-        loadGame(teamDict, teamList, scoreList, baseIndex + 12, baseIndex + 14)      
 
-    loadGame(teamDict, teamList, scoreList, 120, 122)
-    loadGame(teamDict, teamList, scoreList, 123, 125)
-    loadGame(teamDict, teamList, scoreList, 121, 124)
+        # The two teams that play each other in a given game are not next to each other in the html format.
+        # The teams that play each other are matched up based on haw many total games they play and 
+        # the loaction of their name in teamsList.
+        baseIndex = 0
+        for x in range(0, 8):
+            baseIndex = x * 15
 
-    for q in teamDict.keys():
-        if teamDict[q][0] > 0:
-            print q + " " + str(teamDict[q][0]) + ", " + str(teamDict[q][1])
+            # Loads all the games that the first or sixth seed would play if they won every game
+            for y in range(0, 4):
+                # upperIndex is the index of a team that appears earlier in teamList, lowerIndex is the other.
+                upperIndex = baseIndex + y
+                lowerIndex = int(baseIndex + float(y**3)/3 + 5/3 * y + 4)
+
+                loadGame(teamDict, teamList, scoreList, upperIndex, lowerIndex)
+
+                # The top game in this regional bracket has already been loaded. This break prevents it from being loaded again.
+                if y == 2 and x % 2 == 1:
+                    break
+
+            loadGame(teamDict, teamList, scoreList, baseIndex + 5, baseIndex + 7)
+            loadGame(teamDict, teamList, scoreList, baseIndex + 8, baseIndex + 11)
+            loadGame(teamDict, teamList, scoreList, baseIndex + 9, baseIndex + 13)  
+            loadGame(teamDict, teamList, scoreList, baseIndex + 12, baseIndex + 14)      
+
+        loadGame(teamDict, teamList, scoreList, 120, 122)
+        loadGame(teamDict, teamList, scoreList, 123, 125)
+        loadGame(teamDict, teamList, scoreList, 121, 124)
+
+
+
+        for team_name in teamDict.keys():
+            my_team = TourneyResult(season=movingYear, name=team_name, wins=teamDict[team_name][0], pointDif=teamDict[team_name][1])
+            session.add(my_team)
+
+        session.commit()
+        
+        # if teamDict[q][0] > 0:
+        #     print q + " " + str(teamDict[q][0]) + ", " + str(teamDict[q][1])
 
         # Creates list of team names from list of number of games played using list comprehension. Not used anymore, but kept around for reference.
         # alternateTeamsList = [teamList[baseIndex + sum(numGamesPlayedList[0:i]): baseIndex + sum(numGamesPlayedList[0:i]) + numGamesPlayedList[i]] for i in range(0, len(numGamesPlayedList))]
 
-    # siteData = [(team, points) for team in siteData if ]
-
-                
-
-    # for x in range(0, numberOfYears):
-    #     print startYear - x
 
 #----------------------------------------------------------------------------
 
