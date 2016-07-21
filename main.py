@@ -1,3 +1,4 @@
+from __future__ import division;
 import MySQLdb;
 import csv;
 import urllib2;
@@ -161,6 +162,18 @@ def loadSecondNames(session, numberOfYears):
 def isInt(String):
     return re.search(r'\d', String)
 
+# Loads win and score differential data from two given indices
+def loadGame(d, teams, scores, index1, index2):
+    # Load point differential.
+    d[teams[index1]][1] += scores[index1] - scores[index2]
+    d[teams[index2]][1] += scores[index2] - scores[index1]
+
+    # If upper team score < lower team score...
+    if scores[index2] < scores[index1]:
+        d[teams[index1]][0] += 1
+    else:
+        d[teams[index2]][0] += 1 
+
 def loadTourneyResults(session, numberOfYears):
     rootTourneyLink1 = "http://www.sports-reference.com/cbb/postseason/"
     rootTourneyLink2 = "-ncaa.html"
@@ -179,8 +192,7 @@ def loadTourneyResults(session, numberOfYears):
     teamNameList = [instance.name for instance in session.query(Team)]
     secondNameList = [instance.second_name for instance in session.query(Team)]
 
-    # teamDict keeps track of wins and point differential
-    teamDict = {}
+    
 
     siteData = []
     for a in soup.find_all('a'):
@@ -196,30 +208,47 @@ def loadTourneyResults(session, numberOfYears):
 
     scoreList = [int(x) for x in siteData if isInt(x)]
 
+    # teamDict keeps track of wins and point differential -- [# wins, point differential]
+    teamDict = {key: [0, 0] for key in teamList}
+
     for x in range(0, len(scoreList)):
         print teamList[x] + " " + str(x) + ", " + str(scoreList[x])
+    print('-------------------------------------------------------')
 
     # The two teams that play each other in a given game are not next to each other in the html format.
     # The teams that play each other are matched up based on haw many total games they play and 
-    # the pairty of their seed.
-    for x in range(2, 3):
-        baseIndex = x * 30
+    # the loaction of their name in teamsList.
+    baseIndex = 0
+    for x in range(0, 8):
+        baseIndex = x * 15
 
-        # Makes a list of integers (always length of 16) of the number of times each team plays in a game
-        y = 1
-        numGamesPlayedList = [1]
-        while y < 30:
-            if teamList[baseIndex + y] == teamList[baseIndex + y - 1]:
-                numGamesPlayedList[len(numGamesPlayedList) - 1] += 1
-            else:
-                numGamesPlayedList.append(1)
-            y += 1
-        print numGamesPlayedList
-        print str(len(numGamesPlayedList))
-        
-        # Creates list of team names from list of number of games played using list comprehension.
-        alternateTeamsList = [teamList[baseIndex + sum(numGamesPlayedList[0:i]): baseIndex + sum(numGamesPlayedList[0:i]) + numGamesPlayedList[i]] for i in range(0, len(numGamesPlayedList))]
-        # print alternateTeamsList
+        # Loads all the games that the first or sixth seed would play if they won every game
+        for y in range(0, 4):
+            # upperIndex is the index of a team that appears earlier in teamList, lowerIndex is the other.
+            upperIndex = baseIndex + y
+            lowerIndex = int(baseIndex + float(y**3)/3 + 5/3 * y + 4)
+
+            loadGame(teamDict, teamList, scoreList, upperIndex, lowerIndex)
+
+            # The top game in this regional bracket has already been loaded. This break prevents it from being loaded again.
+            if y == 2 and x % 2 == 1:
+                break
+
+        loadGame(teamDict, teamList, scoreList, baseIndex + 5, baseIndex + 7)
+        loadGame(teamDict, teamList, scoreList, baseIndex + 8, baseIndex + 11)
+        loadGame(teamDict, teamList, scoreList, baseIndex + 9, baseIndex + 13)  
+        loadGame(teamDict, teamList, scoreList, baseIndex + 12, baseIndex + 14)      
+
+    loadGame(teamDict, teamList, scoreList, 120, 122)
+    loadGame(teamDict, teamList, scoreList, 123, 125)
+    loadGame(teamDict, teamList, scoreList, 121, 124)
+
+    for q in teamDict.keys():
+        if teamDict[q][0] > 0:
+            print q + " " + str(teamDict[q][0]) + ", " + str(teamDict[q][1])
+
+        # Creates list of team names from list of number of games played using list comprehension. Not used anymore, but kept around for reference.
+        # alternateTeamsList = [teamList[baseIndex + sum(numGamesPlayedList[0:i]): baseIndex + sum(numGamesPlayedList[0:i]) + numGamesPlayedList[i]] for i in range(0, len(numGamesPlayedList))]
 
     # siteData = [(team, points) for team in siteData if ]
 
