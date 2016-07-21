@@ -1,5 +1,5 @@
 # march-madness-learning
-Using Python (2.7) and SQL to predict the results of the NCAA basketball tourney.
+Using Python (2.7) and SQL to predict the results of the NCAA basketball tourney. Check out main.py, that's where all the interesting stuff happens.
 
 I used Sublime Text 2 to develop this project. If you use it, you should purchase the license (https://www.sublimetext.com/buy?v=3). SQLAlchemy is used to make mySQL easier to use from python; download and donate (http://www.sqlalchemy.org/). BeautfulSoup is beautiful. It was used to extract data from web pages (https://www.crummy.com/software/BeautifulSoup/bs4/doc/). 
 
