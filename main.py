@@ -52,6 +52,33 @@ class Team(Base):
 
 #----------------------------------------------------------------------------
 
+class SeasonResult(Base):
+    __tablename__ = 'season_results'
+
+    id = Column(Integer(), primary_key=True, unique=True)
+    season = Column(Integer(), unique=False)
+    name = Column(String(50), unique=False)
+    winPercentage = Column(Float())
+    SRS = Column(Float())
+    schedule_strength = Column(Float())
+    fg_attempted = Column(Integer()) 
+    fg_percentage = Column(Float())
+    tp_attempted = Column(Integer())
+    tp_percentage = Column(Float())
+    ft_attempted = Column(Integer())
+    ft_percentage = Column(Float())
+    o_rebounds = Column(Integer())
+    total_rebounds = Column(Integer())
+    assists = Column(Integer())
+    steals = Column(Integer())
+    blocks = Column(Integer())
+
+    def __repr__(self):
+        return "<TourneyResults(season='%d' name='%s', wins='%d', pointDif='%d')>" % (
+                            self.season, self.name, self.wins, self.pointDif)
+
+#----------------------------------------------------------------------------
+
 class TourneyResult(Base):
     __tablename__ = 'tourney_results'
 
@@ -64,6 +91,7 @@ class TourneyResult(Base):
     def __repr__(self):
         return "<TourneyResults(season='%d' name='%s', wins='%d', pointDif='%d')>" % (
                             self.season, self.name, self.wins, self.pointDif)
+
 
 #-------------------------------------------------------------------------
 
@@ -187,13 +215,13 @@ def loadTourneyResults(session, numberOfYears):
     else:
         startYear = now.year - 1
 
-    teamNameList = [instance.name for instance in session.query(Team)]
+    # List of second names stored because of name discrepency in the tourney data
     secondNameList = [instance.second_name for instance in session.query(Team)]
 
     for x in range(0, numberOfYears):
         movingYear = startYear - x
 
-        sourceTemp = loadPageSource(rootTourneyLink1 + str(startYear) + rootTourneyLink2)
+        sourceTemp = loadPageSource(rootTourneyLink1 + str(movingYear) + rootTourneyLink2)
         soup = BeautifulSoup(sourceTemp, 'html.parser')
 
 
@@ -252,7 +280,13 @@ def loadTourneyResults(session, numberOfYears):
 
 
         for team_name in teamDict.keys():
-            my_team = TourneyResult(season=movingYear, name=team_name, wins=teamDict[team_name][0], pointDif=teamDict[team_name][1])
+            if team_name in secondNameList:
+                for instance in session.query(Team):
+                    if team_name == instance.second_name:
+                        my_team = TourneyResult(season=movingYear, name=instance.name, wins=teamDict[team_name][0], pointDif=teamDict[team_name][1])
+                        break
+            else:
+                my_team = TourneyResult(season=movingYear, name=team_name, wins=teamDict[team_name][0], pointDif=teamDict[team_name][1])
             session.add(my_team)
 
         session.commit()
@@ -262,6 +296,36 @@ def loadTourneyResults(session, numberOfYears):
 
         # Creates list of team names from list of number of games played using list comprehension. Not used anymore, but kept around for reference.
         # alternateTeamsList = [teamList[baseIndex + sum(numGamesPlayedList[0:i]): baseIndex + sum(numGamesPlayedList[0:i]) + numGamesPlayedList[i]] for i in range(0, len(numGamesPlayedList))]
+
+def loadSeasonResults(session, numberOfYears):
+    rootSeasonLink1 = "http://www.sports-reference.com/cbb/seasons/"
+    rootSeasonLink2 = "-school-stats.html"
+
+    now = datetime.datetime.now()
+
+    # If the current month is April or before the data from this year has probably not been uploaded yet
+    if 4 < now.month:
+        startYear = now.year 
+    else:
+        startYear = now.year - 1
+
+    teamNameList = [instance.name for instance in session.query(Team)]
+    secondNameList = [instance.second_name for instance in session.query(Team)]
+
+    # For loop - iterate through years
+    sourceTemp = loadPageSource(rootSeasonLink1 + str(startYear) + rootSeasonLink2)
+    soup = BeautifulSoup(sourceTemp, 'html.parser')
+
+    siteData = []
+    for a in soup.find_all('a'):
+        if a.parent.parent.name == "tr" and a.parent.name == "td":
+                siteData.append(a.getText().encode("utf-8"))
+                print a.getText().encode("utf-8")
+                movingElement = a.parent
+                for x in range(0, 32):
+                    movingElement = movingElement.nextSibling
+                    print (movingElement.text)
+
 
 
 #----------------------------------------------------------------------------
@@ -287,6 +351,9 @@ Base.metadata.create_all(engine)
 # loadSecondNames(mainSession, 25)
 
 # Load the results of the NCAA tournament from the past x years
-loadTourneyResults(mainSession, 25)
+# loadTourneyResults(mainSession, 25)
+
+# Loads season data from past x years into season_results
+loadSeasonResults(mainSession, 25)
 
 print "FINISHED  WTIH 0 ERRORS"
