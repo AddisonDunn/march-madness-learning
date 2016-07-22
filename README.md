@@ -10,3 +10,5 @@ Formerly, offline csv files were used as the source of data. This proved to be i
 I used Python 2.7 on this project. It is likely you will have problems using any files on this repository running Python 3.
 
 Feel free to contact me, and enjoy!
+
+tourney_results:
