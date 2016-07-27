@@ -4,6 +4,7 @@ from sqlalchemy.ext.automap import automap_base;
 from sqlalchemy.orm import Session, relationship;
 from sqlalchemy.ext.declarative import declarative_base;
 from loadData import Team, SeasonResult, TourneyResult;
+from mia import Mia;
 
 Base = automap_base()
 
@@ -11,11 +12,13 @@ Base = automap_base()
 
 def mainAlgo(session):
 
+	Mia mia = new Mia();
+
 	# ITERATE THROUGH YEARS:
 	currentYear = 2014
 	tourneyResultList = [instance for instance in session.query(TourneyResult).filter(TourneyResult.season == currentYear)]
 	teamList = [result.name for result in tourneyResultList]
-	
+
 
 #----------------------------------------------------------------------------
 
