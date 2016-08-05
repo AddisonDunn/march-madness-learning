@@ -12,12 +12,24 @@ Base = automap_base()
 
 def mainAlgo(session):
 
-	Mia mia = new Mia();
+	mia = Mia()
 
 	# ITERATE THROUGH YEARS:
 	currentYear = 2014
-	tourneyResultList = [instance for instance in session.query(TourneyResult).filter(TourneyResult.season == currentYear)]
-	teamList = [result.name for result in tourneyResultList]
+	# tourneyResultList = [instance for instance in session.query(TourneyResult).filter(TourneyResult.season == currentYear)]
+	# tourneyNameLIst = [instance.name for instance in tourneyResultList]
+	tourneyResultDict = {instance.name : instance.wins for instance in session.query(TourneyResult).filter(TourneyResult.season == currentYear)}
+	seasonResultList = [instance for instance in session.query(SeasonResult).filter(SeasonResult.season == currentYear)]
+	
+
+	for entry in seasonResultList:
+		if entry.name in tourneyResultDict.keys():
+			print entry.name
+			print entry
+			mia.train(tourneyResultDict[entry.name], entry)
+			break
+
+	
 
 
 #----------------------------------------------------------------------------

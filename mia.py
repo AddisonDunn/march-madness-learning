@@ -1,6 +1,6 @@
 import random
 
-class Mia():
+class Mia(object):
 
 	def __init__(self):
 		numOfVariables = 1
@@ -8,9 +8,15 @@ class Mia():
 		beta1 = random.randint(-100, 100)
 		weightArray = [random.randint(-100, 100) for x in range(0, numOfVariables)] # the betas
 
+	def convertToList(tableEntry):
+		return [tableEntry.winPercentage, tableEntry.SRS, tableEntry.schedule_strength, tableEntry.fg_attempted, tableEntry.fg_percentage, tableEntry.tp_attempted, \
+    	tableEntry.tp_percentage, tableEntry.ft_attempted, tableEntry.ft_percentage, tableEntry.o_rebounds, tableEntry.total_rebounds, tableEntry.assists, \
+    	tableEntry.steals, tableEntry.blocks, tableEntry.turnovers, tableEntry.fouls]
 
-	def train(y, trainingData):
+	def train(y, seasonResult):
 		alpha = 0.05
+
+		trainingData = convertToList(seasonResult)
 
 		# Find the gradiant of the cost function for each dg/dx for each x in training data.
 		# Cost function: g(x1, x2, x3... , y) = (y - (Beta1 + x1*weight1 + x2*weight2...))^2
