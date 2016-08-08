@@ -10,9 +10,17 @@ Base = automap_base()
 
 #----------------------------------------------------------------------------
 
+def convertToList(tableEntry):
+		return [tableEntry.winPercentage, tableEntry.SRS, tableEntry.schedule_strength, tableEntry.fg_attempted, tableEntry.fg_percentage, tableEntry.tp_attempted, \
+    	tableEntry.tp_percentage, tableEntry.ft_attempted, tableEntry.ft_percentage, tableEntry.o_rebounds, tableEntry.total_rebounds, tableEntry.assists, \
+    	tableEntry.steals, tableEntry.blocks, tableEntry.turnovers, tableEntry.fouls]
+
+#----------------------------------------------------------------------------
+
 def mainAlgo(session):
 
 	mia = Mia()
+	print mia.weightArray
 
 	# ITERATE THROUGH YEARS:
 	currentYear = 2014
@@ -21,13 +29,15 @@ def mainAlgo(session):
 	tourneyResultDict = {instance.name : instance.wins for instance in session.query(TourneyResult).filter(TourneyResult.season == currentYear)}
 	seasonResultList = [instance for instance in session.query(SeasonResult).filter(SeasonResult.season == currentYear)]
 	
-
+	
 	for entry in seasonResultList:
 		if entry.name in tourneyResultDict.keys():
-			print entry.name
 			print entry
-			mia.train(tourneyResultDict[entry.name], entry)
-			break
+			mia.train(tourneyResultDict[entry.name], convertToList(entry))
+			print mia.weightArray
+
+
+	
 
 	
 
